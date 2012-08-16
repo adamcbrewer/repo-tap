@@ -93,20 +93,39 @@ var	https = require('https'),
 // to retreive the account changeset.
 server.listen(8888);
 
+
+// Sevring up the assets directory
+var publicDir = __dirname + '/public',
+	assetsDir = publicDir + '/assets';
+
+server.use('/assets', express.static( assetsDir ));
+
+
 // Set up our routes
 server.get('/', function (req, res) {
+
+	var debug = false;
+
+
+	// debug = JSON.stringify(req.query);
 
 	var source = app.loadTemplate('layout.tmpl'),
 		template = handlebars.compile(source),
 		view = template({
-			copy: 'test',
+			copy: 's;kdflkjlkj',
 			stylesheets: [
 				{ href: 'assets/css/reset.css' },
 				{ href: 'assets/css/core.css' }
-			]
+			],
+			scripts: [
+				{ href: '' }
+			],
+			debug: debug
 		});
 
+
 	res.send(view);
+
 
 	// app.init(res);
 	// app.getChangesets();

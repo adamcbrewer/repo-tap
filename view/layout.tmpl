@@ -11,6 +11,8 @@
 		<link href="{{ href }}" rel="stylesheet">
 	{{/stylesheets}}
 
+	<script src="assets/js/lib/modernizr-2.6.1.min.js"></script>
+
 </head>
 <body>
 
@@ -40,6 +42,10 @@
 		</footer> <!-- #footer -->
 			
 	</div> <!-- #wrapper -->
+
+	{{#if debug }}
+		<pre class="debug"><code>{{ debug }}</code></pre>
+	{{/if}}
 
 </body>
 </html>
