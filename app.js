@@ -3,6 +3,8 @@ var	https = require('https'),
 	config = require('./config.js'),
 	express = require('express'),
 	io = require('socket.io'),
+	fs = require('fs'),
+	handlebars = require('handlebars'),
 
 
 
@@ -59,6 +61,24 @@ var	https = require('https'),
 
 			}).end();
 
+		},
+
+		render: function (template, data) {
+
+			return template(data);
+
+		},
+
+		loadTemplate: function (templateFile) {
+
+			
+			var source = fs.readFileSync('./view/'+ templateFile, 'utf8', function (err, html) {
+				if (err) throw err;
+				return html;
+			});
+
+			return source;
+
 		}
 
 	};
@@ -76,9 +96,20 @@ server.listen(8888);
 // Set up our routes
 server.get('/', function (req, res) {
 
-	// TODO: HTML templates
-	app.init(res);
-	app.getChangesets();
+	var source = app.loadTemplate('layout.tmpl'),
+		template = handlebars.compile(source),
+		view = template({
+			copy: 'test',
+			stylesheets: [
+				{ href: 'assets/css/reset.css' },
+				{ href: 'assets/css/core.css' }
+			]
+		});
+
+	res.send(view);
+
+	// app.init(res);
+	// app.getChangesets();
 
 });
 
