@@ -2,7 +2,6 @@ var	https = require('https'),
 	http = require('http'),
 	config = require('./config.js'),
 	express = require('express'),
-	io = require('socket.io'),
 	fs = require('fs'),
 	handlebars = require('handlebars'),
 
@@ -10,7 +9,7 @@ var	https = require('https'),
 
 	server = express(),
 	socketServer = http.createServer(server),
-	io = io.listen(socketServer),
+	io = require('socket.io').listen(socketServer),
 
 
 	// Our application settings and configs
@@ -30,15 +29,17 @@ var	https = require('https'),
 
 		latestResults: null,
 
-		init: function (res) {
-			this.response = res;
+		init: function (socket) {
+			this.socket = socket;
 		},
 
-		output: function (json) {
-			this.response.send(json);
+		output: function (socketEvent, json) {
+			
+			this.socket.emit(socketEvent, { results: json });
+
 		},
 
-		getChangesets: function (res) {
+		getChangesets: function () {
 			
 			var that = this,
 				changesets = null;
@@ -50,13 +51,15 @@ var	https = require('https'),
 
 				res.setEncoding('utf8');
 				
-				var json = '';
+				var jsonString = '',
+					json = {};
 				res.on('data', function (chunk) {
-						json += chunk;
+						jsonString += chunk;
 					})
 					.on('end', function () {
+						json = JSON.parse(jsonString);
 						that.latestResults = json;
-						that.output(json);
+						that.output('all changesets', json);
 					});
 
 			}).end();
@@ -92,6 +95,7 @@ var	https = require('https'),
 // When a user lands on this page, a new http request should be fired
 // to retreive the account changeset.
 server.listen(8888);
+socketServer.listen(8887);
 
 
 // Sevring up the assets directory
@@ -99,6 +103,7 @@ var publicDir = __dirname + '/public',
 	assetsDir = publicDir + '/assets';
 
 server.use('/assets', express.static( assetsDir ));
+// server.use('/socket.io', express.static( __dirname + '/node_modules/socket.io/lib' ));
 
 
 // Set up our routes
@@ -126,18 +131,12 @@ server.get('/', function (req, res) {
 
 	res.send(view);
 
-
-	// app.init(res);
-	// app.getChangesets();
-
 });
 
+io.sockets.on('connection', function (socket) {
+	socket.emit('server msg', { msg: 'Socket open' });
 
-// io.sockets.on('connection', function (socket) {
-// 	console.log('sockets!');
-// 	socket.emit('news', { hello: 'world' });
-// 	socket.on('my other event', function (data) {
-// 		console.log(data);
-// 	});
-// });
+	app.init(socket);
+	app.getChangesets();
 
+});

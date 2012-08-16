@@ -43,6 +43,19 @@
 			
 	</div> <!-- #wrapper -->
 
+	<script src="http://localhost:8887/socket.io/socket.io.js"></script>
+	<script>
+		var socket = io.connect('http://localhost:8887');
+		socket.on('server msg', function (data) {
+			console.info(data.msg);
+		});
+
+		socket.on('all changesets', function (data) {
+			console.log(data);
+		});
+
+	</script>
+
 	{{#if debug }}
 		<pre class="debug"><code>{{ debug }}</code></pre>
 	{{/if}}
