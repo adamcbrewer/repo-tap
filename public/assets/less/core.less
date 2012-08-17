@@ -22,11 +22,19 @@
 /* ====================================================
     LESS VARS
 ==================================================== */
-@c-bg: #FFF;
-@c-copy: #333;
+@c-bg: #F8F8F8;
+@c-copy: #444;
 
+@c-blue: #3366ff;
+@c-green: #33cb98;
+@c-orange: #ff9934;
+@c-red: #ff3234;
 
+@f-stack-1: Populaire, "Helvetica Neue", Helvetica, Arial, sans-serif;
+@f-stack-2: Monaco;
+@f-size: 14px;
 
+@w-wrap: 800px;
 
 /* ====================================================
     BASE STYLES
@@ -52,7 +60,7 @@
 ::selection { background:#333; color:#F8F8F8; text-shadow:none; }
 
 html, body { -web-font-smoothing: antialiased; }
-body { color: #333; background-color: #F8F8F8; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+body { color: @c-copy; background-color: @c-bg; font-family: @f-stack-1; font-size: @f-size; }
 
 
 ::-webkit-input-placeholder {}
@@ -85,10 +93,18 @@ input:disabled {}
 input:checked {}
 input:indeterminate {} /* un-selected radio buttons :) */
 
+
+h1, h2, h3, h4, h5 { margin-bottom: 10px; }
+h1 { font-size: 1.8em; }
+h2 { font-size: 1.6em; }
+h3 { font-size: 1.4em; }
+h4 { font-size: 1.2em; }
+h5 { font-size: 1em; }
+
 ::-webkit-input-placeholder {}
 :-moz-placeholder {}
 
-code { font-family: Monaco; padding: 10px; border: 1px solid #DDD; border-radius: 4px; background-color: #F2F2F2; text-shadow: 0px 1px 0px  #FFF; }
+code { font-family: @f-stack-2; padding: 10px; border: 1px solid #DDD; border-radius: 4px; background-color: #F2F2F2; text-shadow: 0px 1px 0px  #FFF; }
 
 
 /* ====================================================
@@ -97,15 +113,29 @@ code { font-family: Monaco; padding: 10px; border: 1px solid #DDD; border-radius
     Layout rules divide the page into sections.
     Layouts hold one or more modules together.
 ==================================================== */
+#wrapper { max-width: @w-wrap; margin: auto; padding: 2%;   }
+#header { margin: 40px auto 40px; }
 
-
-
+#commits {
+    border: 1px solid #DDD;
+    border-radius: 4px;
+}
 /* ====================================================
     MODULES STYLES
 
     Modules are the reusable, modular parts of our design.
     They are the callouts, the sidebar sections, the product lists and so on.
 ==================================================== */
+.commit {
+    margin: 0px 0px 0px;
+    padding: 20px 20px 20px;
+    border-bottom: 1px solid #FFF; 
+    border-top: 1px solid #BBB; 
+    &:last-child { border-bottom: none; }
+    &:first-child { border-top: none; }
+}
+
+
 .debug { position: fixed; bottom: 20px; right: 20px; font-size: 14px; }
 
 

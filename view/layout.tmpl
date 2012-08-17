@@ -7,9 +7,9 @@
 	<meta name="description" content="">
 	<meta name="keywords" content="">
 
-	{{#stylesheets}}
+	{{#stylesheets }}
 		<link href="{{ href }}" rel="stylesheet">
-	{{/stylesheets}}
+	{{/stylesheets }}
 
 	<script src="assets/js/lib/modernizr-2.6.1.min.js"></script>
 
@@ -21,7 +21,7 @@
 		<header id="header">
 			
 			<h1>RepoTap</h1>
-			<h2>Commit Snooper!</h2>
+			<p>Commit Snooper!</p>
 
 			<nav id="navigation">
 				
@@ -31,9 +31,7 @@
 			
 		<section role="main" id="content">
 			
-			<article>
-				<p>{{ copy }}</p>
-			</article>
+			<section id="commits"></section>
 				
 		</section> <!-- #content -->
 		
@@ -45,20 +43,18 @@
 
 	<script src="http://localhost:8887/socket.io/socket.io.js"></script>
 	<script>
-		var socket = io.connect('http://localhost:8887');
-		socket.on('server msg', function (data) {
-			console.info(data.msg);
-		});
-
-		socket.on('all changesets', function (data) {
-			console.log(data);
-		});
+		var App = {
+			socket: io.connect('http://localhost:8887'),
+			basePath: ''
+		};
 
 	</script>
+	<script src="assets/js/lib/jq-1.8.0.min.js"></script>
+	<script src="assets/js/script.js"></script>
 
 	{{#if debug }}
-		<pre class="debug"><code>{{ debug }}</code></pre>
-	{{/if}}
+		<pre class="debug">{{ debug }}</pre>
+	{{/if }}
 
 </body>
 </html>

@@ -16,59 +16,73 @@ var	https = require('https'),
 	app = {
 
 		// options for our HTTP request object
-		opts: {
+		bbOpts: {
 			host: 'api.bitbucket.org',
 			port: 443,
 			method: 'GET',
-			path: '/1.0/repositories/adamcbrewer/tool-miner/changesets?limit=2',
+			path: '/1.0/repositories/adamcbrewer/tool-miner/changesets',
 			auth: config.auth,
 			headers: {
 				'content-type': 'application/json'
 			}
 		},
 
-		latestResults: null,
+		latestResults: false,
 
 		init: function (socket) {
 			this.socket = socket;
 		},
 
-		output: function (socketEvent, json) {
+		// emits events to the client
+		output: function (socketEvent, data) {
+			this.socket.emit(socketEvent, { results: data });
+		},
+
+		getChangesets: function (limit) {
 			
-			this.socket.emit(socketEvent, { results: json });
+			limit = limit || 10;
+
+			var that = this;
+
+			if (this.latestResults) {
+
+				that.constructTemplate('partials/commit.tmpl', this.latestResults);
+
+			} else {
+				this.bbOpts.path += '?limit=' + limit;
+
+				https.request(this.bbOpts, function(res) {
+
+				// console.log('STATUS: ' + res.statusCode);
+				// console.log('HEADERS: ' + JSON.stringify(res.headers));
+
+					res.setEncoding('utf8');
+					
+					var jsonString = '',
+						json = {};
+					res.on('data', function (chunk) {
+							jsonString += chunk;
+						})
+						.on('end', function () {
+							json = JSON.parse(jsonString);
+							that.latestResults = json;
+
+							that.constructTemplate('partials/commit.tmpl', json);
+
+						});
+
+				}).end();
+			}
 
 		},
 
-		getChangesets: function () {
-			
-			var that = this,
-				changesets = null;
+		constructTemplate: function (tmpl, data) {
 
-			https.request(this.opts, function(res) {
+			var source = this.loadTemplate(tmpl);
+				template = handlebars.compile(source),
+				view = template(data);
 
-			// console.log('STATUS: ' + res.statusCode);
-			// console.log('HEADERS: ' + JSON.stringify(res.headers));
-
-				res.setEncoding('utf8');
-				
-				var jsonString = '',
-					json = {};
-				res.on('data', function (chunk) {
-						jsonString += chunk;
-					})
-					.on('end', function () {
-						json = JSON.parse(jsonString);
-						that.latestResults = json;
-						that.output('all changesets', json);
-					});
-
-			}).end();
-
-		},
-
-		render: function (template, data) {
-
-			return template(data);
+			this.output('all changesets', view);
 
 		},
 
@@ -117,7 +131,6 @@ server.get('/', function (req, res) {
 	var source = app.loadTemplate('layout.tmpl'),
 		template = handlebars.compile(source),
 		view = template({
-			copy: 's;kdflkjlkj',
 			stylesheets: [
 				{ href: 'assets/css/reset.css' },
 				{ href: 'assets/css/core.css' }
@@ -137,6 +150,6 @@ io.sockets.on('connection', function (socket) {
 	socket.emit('server msg', { msg: 'Socket open' });
 
 	app.init(socket);
-	app.getChangesets();
+	app.getChangesets(null);
 
 });
