@@ -7,12 +7,23 @@
 	});
 
 	App.socket.on('all changesets', function (data) {
-		App.writeData(data.results);
+		App.showCommits(data.results.commits);
 	});
 
 
-	App.writeData = function (data) {
-		this.commits.append(data);
+	App.showCommits = function (commits) {
+
+		commits = commits || [];
+
+		var numCommits = commits.length,
+			that = this;
+
+		$.each(commits, function (i, commit) {
+			setTimeout(function () {
+				that.commits.append(commit);
+			}, (50 * i) );
+		});
+
 	};
 
 

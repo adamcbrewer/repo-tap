@@ -114,11 +114,15 @@ code { font-family: @f-stack-2; padding: 10px; border: 1px solid #DDD; border-ra
     Layouts hold one or more modules together.
 ==================================================== */
 #wrapper { max-width: @w-wrap; margin: auto; padding: 2%;   }
-#header { margin: 40px auto 40px; }
+#header {
+    margin: 40px auto 40px;
+    h1 { color: @c-blue; }
+}
 
 #commits {
-    border: 1px solid #DDD;
+    border: 1px solid #C9C9C9;
     border-radius: 4px;
+    overflow: hidden;
 }
 /* ====================================================
     MODULES STYLES
@@ -129,10 +133,12 @@ code { font-family: @f-stack-2; padding: 10px; border: 1px solid #DDD; border-ra
 .commit {
     margin: 0px 0px 0px;
     padding: 20px 20px 20px;
-    border-bottom: 1px solid #FFF; 
-    border-top: 1px solid #BBB; 
+    border-bottom: 1px solid #C9C9C9; 
+    border-top: 1px solid #FFF; 
     &:last-child { border-bottom: none; }
     &:first-child { border-top: none; }
+    &:hover { background: #FDFDFD; }
+    time { color: @c-blue; }
 }
 
 

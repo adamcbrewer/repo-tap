@@ -80,9 +80,17 @@ var	https = require('https'),
 
 			var source = this.loadTemplate(tmpl);
 				template = handlebars.compile(source),
-				view = template(data);
+				commits = [],
+				numCommits = data.changesets.length,
+				i = 0;
 
-			this.output('all changesets', view);
+			for ( i; i < numCommits; i++ ) {
+				commits.push(
+					template(data.changesets[i])
+				);
+			}
+
+			this.output('all changesets', { commits: commits });
 
 		},
 
