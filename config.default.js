@@ -5,5 +5,10 @@
 *
 **/
 module.exports = {
-	auth: 'username:password'
+	auth: 'username:password',
+	
+	// array of repositiories we want commit data from
+	repos: [
+		'username/repo'
+	]
 };

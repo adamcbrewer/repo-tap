@@ -4,6 +4,7 @@ var	https = require('https'),
 	express = require('express'),
 	fs = require('fs'),
 	handlebars = require('handlebars'),
+	crypto = require('crypto'),
 
 
 
@@ -11,69 +12,89 @@ var	https = require('https'),
 	socketServer = http.createServer(server),
 	io = require('socket.io').listen(socketServer),
 
+	md5sum = crypto.createHash('md5'),
+
 
 	// Our application settings and configs
 	app = {
 
-		// options for our HTTP request object
-		bbOpts: {
-			host: 'api.bitbucket.org',
-			port: 443,
-			method: 'GET',
-			path: '/1.0/repositories/adamcbrewer/tool-miner/changesets',
-			auth: config.auth,
-			headers: {
-				'content-type': 'application/json'
+		results: {
+			commits: {
+				// commits are stacked here based on key: value pairs
 			}
 		},
 
-		latestResults: false,
-
 		init: function (socket) {
 			this.socket = socket;
+
+			var totalRepos = config.repos.length,
+				i = 0;
+
+			for (i; i < totalRepos; i++) {
+				console.log('getting: ' + config.repos[i]);
+				this.getLatest({
+					repo: config.repos[i]
+				});
+			}
+
 		},
 
-		// emits events to the client
-		output: function (socketEvent, data) {
-			this.socket.emit(socketEvent, { results: data });
-		},
+		getLatest: function (args) {
 
-		getChangesets: function (limit) {
-			
-			limit = limit || 10;
+			args = args || {};
 
-			var that = this;
+			var that = this,
+				repo = args.repo;
 
-			if (this.latestResults) {
+				// options for our HTTP request object
+				opts = {
+					host: 'api.bitbucket.org',
+					port: 443,
+					method: 'GET',
+					path: '/1.0/repositories/' + args.repo + '/changesets?limit=' + 1,
+					auth: config.auth,
+					headers: {
+						'content-type': 'application/json'
+					}
+				};
 
-				that.constructTemplate('partials/commit.tmpl', this.latestResults);
-
-			} else {
-				this.bbOpts.path += '?limit=' + limit;
-
-				https.request(this.bbOpts, function(res) {
+			https.request(opts, function(res) {
 
 				// console.log('STATUS: ' + res.statusCode);
 				// console.log('HEADERS: ' + JSON.stringify(res.headers));
 
-					res.setEncoding('utf8');
-					
-					var jsonString = '',
-						json = {};
-					res.on('data', function (chunk) {
-							jsonString += chunk;
-						})
-						.on('end', function () {
-							json = JSON.parse(jsonString);
-							that.latestResults = json;
+				res.setEncoding('utf8');
+				
+				var jsonString = '',
+					json = {};
+				res.on('data', function (chunk) {
+						jsonString += chunk;
+					})
+					.on('end', function () {
+						that.processResults(jsonString, repo);
+					});
 
-							that.constructTemplate('partials/commit.tmpl', json);
+			}).end();
 
-						});
+		},
 
-				}).end();
+		// This function is the router/filter for what happens to data when
+		// it return from the remote source
+		processResults: function (jsonString, repo) {
+			data = JSON.parse(jsonString);
+			data.repo = repo || null;
+
+			var commits = this.results.commits[repo];
+
+			// if (commits) console.log('Stored Node: ' + commits.node, 'Recent node: ' + data.changesets[0].node, commits.node == data.changesets[0].node);
+			
+			if (commits && ( commits.node == data.changesets[0].node) ) {
+				console.log('we already have the latest');
+			} else {
+				// Store the latest commits we have just processed
+				this.results.commits[data.repo] = data.changesets[0]; // because we only have one, we store the first
+				this.constructTemplate('partials/commit.tmpl', data);
 			}
-
 		},
 
 		constructTemplate: function (tmpl, data) {
@@ -84,14 +105,22 @@ var	https = require('https'),
 				numCommits = data.changesets.length,
 				i = 0;
 
+			// Renders a new html element for each changeset
+			// and pushed to the stack.
 			for ( i; i < numCommits; i++ ) {
+				data.changesets[i].repoName = data.repo;
 				commits.push(
 					template(data.changesets[i])
 				);
 			}
 
-			this.output('all changesets', { commits: commits });
+			this.output('all changesets', { commits: commits.reverse() });
 
+		},
+
+		// emits events to the client
+		output: function (socketEvent, data) {
+			this.socket.emit(socketEvent, { results: data });
 		},
 
 		loadTemplate: function (templateFile) {
@@ -117,7 +146,7 @@ var	https = require('https'),
 // When a user lands on this page, a new http request should be fired
 // to retreive the account changeset.
 server.listen(8888);
-socketServer.listen(8887);
+socketServer.listen(8080);
 
 
 // Sevring up the assets directory
@@ -143,9 +172,6 @@ server.get('/', function (req, res) {
 				{ href: 'assets/css/reset.css' },
 				{ href: 'assets/css/core.css' }
 			],
-			scripts: [
-				{ href: '' }
-			],
 			debug: debug
 		});
 
@@ -157,7 +183,19 @@ server.get('/', function (req, res) {
 io.sockets.on('connection', function (socket) {
 	socket.emit('server msg', { msg: 'Socket open' });
 
+	var totalRepos = config.repos.length,
+		i = 0,
+		delay = 1000 * 10;
+
+	setTimeout(function () {
+		for (i; i < totalRepos; i++) {
+			console.log('getting: ' + config.repos[i]);
+			app.getLatest({
+				repo: config.repos[i]
+			});
+		}
+	}, delay);
+
 	app.init(socket);
-	app.getChangesets(null);
 
 });

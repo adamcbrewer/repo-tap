@@ -10,6 +10,10 @@
 		App.showCommits(data.results.commits);
 	});
 
+	App.socket.on('debug', function (data) {
+		console.dir(data);
+	});
+
 
 	App.showCommits = function (commits) {
 
