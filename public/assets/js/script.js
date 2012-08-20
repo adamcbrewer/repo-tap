@@ -20,13 +20,19 @@
 		commits = commits || [];
 
 		var numCommits = commits.length,
+			totalCommits = this.commits.find('.commit').length,
 			that = this;
+
+		console.log(this.commits);
 
 		$.each(commits, function (i, commit) {
 			setTimeout(function () {
-				that.commits.append(commit);
+				that.commits.prepend(commit);
 			}, (50 * i) );
 		});
+
+		console.log(totalCommits);
+		this.commitCount.html(totalCommits);
 
 	};
 
@@ -36,5 +42,6 @@
 $(function () {
 
 	App.commits = $('#commits');
+	App.commitCount = $('#commit-count');
 
 });

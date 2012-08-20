@@ -21,7 +21,8 @@ var	https = require('https'),
 		results: {
 			commits: {
 				// commits are stacked here based on key: value pairs
-			}
+			},
+			count: 0 // total commits fetched since the server's been running
 		},
 
 		init: function (socket) {
@@ -90,6 +91,7 @@ var	https = require('https'),
 			
 			if (commits && ( commits.node == data.changesets[0].node) ) {
 				console.log('we already have the latest');
+				// this.constructTemplate('partials/commit.tmpl', data);
 			} else {
 				// Store the latest commits we have just processed
 				this.results.commits[data.repo] = data.changesets[0]; // because we only have one, we store the first
