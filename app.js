@@ -29,9 +29,7 @@ var	https = require('https'),
 		totalRepoRequests: 0, // how many times we have called an individual repo
 
 		results: {
-			commits: {
-				// commits are stacked here based on key: value pairs
-			},
+			commits: null,
 			count: 0 // total commits fetched since the server's been running
 		},
 		clients: {},
@@ -44,16 +42,41 @@ var	https = require('https'),
 
 		},
 
+
+		// push the connected client to the stack.
+		// each one should have it's own socket with which to connect to
 		createClient: function (socket) {
 
 			this.clients[socket.id] = socket;
 
-			console.log('\n-- The connecte clients are: \n');
-			console.log(this.clientCount);
-			console.log(this.clients);
+			this.clientCount++;
+			console.log('\n-- The connected clients are: ' + this.clientCount + '\n');
 
-			// push the connected client to the stack.
-			// each one should have it's own socket with which to connect to
+			this.checkForCommits(socket);
+
+		},
+
+		destroyClient: function (id) {
+			if (this.clients[id]) delete this.clients[id];
+			this.clientCount--;
+			console.log('\n-- The connected clients are: ' + this.clientCount + '\n');
+		},
+
+		// Check the server for the stack of fetched commits
+		checkForCommits: function (socket) {
+
+			if (this.results.commits !== null) {
+
+				// TODO:
+				// this.sendCommitsToClient(socket);
+			}
+			
+
+		},
+
+		sendCommitsToClient: function (socket) {
+
+
 
 		},
 
@@ -80,8 +103,10 @@ var	https = require('https'),
 			var delay = 1000 * 10,
 				that = this;
 
-			console.log('Fetching first set of results');
+			console.log('LOG: Fetching first set of results');
 			this._timerFetch();
+			
+
 			if (this._loop) {
 				setInterval(function () {
 					that._timerFetch.call(that);
@@ -134,6 +159,8 @@ var	https = require('https'),
 		processResults: function (jsonString, repo) {
 			data = JSON.parse(jsonString);
 			data.repo = repo || null;
+
+			if (this.results.commits === null) this.results.commits = {}; 
 
 			var commits = this.results.commits[repo];
 
@@ -236,6 +263,11 @@ io.sockets.on('connection', function (socket) {
 	socket.emit('server msg', { msg: 'Socket open' });
 
 	app.createClient(socket);
+
+	// So we can remove the client from the server conection stack
+	socket.on('disconnect', function () {
+		app.destroyClient(socket.id);
+	});
 
 });
 
