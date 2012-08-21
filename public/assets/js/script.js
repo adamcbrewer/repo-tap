@@ -23,7 +23,7 @@
 			totalCommits = this.commits.find('.commit').length,
 			that = this;
 
-		console.log(this.commits);
+		// console.log(this.commits);
 
 		$.each(commits, function (i, commit) {
 			setTimeout(function () {
@@ -31,8 +31,8 @@
 			}, (50 * i) );
 		});
 
-		console.log(totalCommits);
-		this.commitCount.html(totalCommits);
+		// console.log(totalCommits);
+		// this.commitCount.html(totalCommits);
 
 	};
 

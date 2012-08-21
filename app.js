@@ -15,8 +15,18 @@ var	https = require('https'),
 	md5sum = crypto.createHash('md5'),
 
 
-	// Our application settings and configs
+
 	app = {
+
+		//
+		// Our application settings and configs
+		//
+
+		_loop: false,
+
+		// TODO: These should both be logged at some stage
+		totalTimeoutRequests: 0, // how many times the timeout-loop has been called
+		totalRepoRequests: 0, // how many times we have called an individual repo
 
 		results: {
 			commits: {
@@ -24,18 +34,58 @@ var	https = require('https'),
 			},
 			count: 0 // total commits fetched since the server's been running
 		},
+		clients: {},
+		clientCount: 0,
 
-		init: function (socket) {
-			this.socket = socket;
+		init: function () {
+			// this.socket = socket;
 
+			this._createTimer();
+
+		},
+
+		createClient: function (socket) {
+
+			this.clients[socket.id] = socket;
+
+			console.log('\n-- The connecte clients are: \n');
+			console.log(this.clientCount);
+			console.log(this.clients);
+
+			// push the connected client to the stack.
+			// each one should have it's own socket with which to connect to
+
+		},
+
+		_timerFetch: function () {
+			
 			var totalRepos = config.repos.length,
 				i = 0;
 
+			this.totalTimeoutRequests++;
+			console.log('\n-- Total timeout requests: ' + this.totalTimeoutRequests + '\n');
+
 			for (i; i < totalRepos; i++) {
 				console.log('getting: ' + config.repos[i]);
-				this.getLatest({
+				this.totalRepoRequests++;
+				app.getLatest({
 					repo: config.repos[i]
 				});
+			}
+			console.log('\n-- Total repository requests: ' + this.totalRepoRequests + '\n');
+		},
+
+		_createTimer: function () {
+
+			var delay = 1000 * 10,
+				that = this;
+
+			console.log('Fetching first set of results');
+			this._timerFetch();
+			if (this._loop) {
+				setInterval(function () {
+					that._timerFetch.call(that);
+				}, delay);
 			}
 
 		},
@@ -87,7 +137,7 @@ var	https = require('https'),
 
 			var commits = this.results.commits[repo];
 
-			// if (commits) console.log('Stored Node: ' + commits.node, 'Recent node: ' + data.changesets[0].node, commits.node == data.changesets[0].node);
+			if (commits) console.log('Stored Node: ' + commits.node, 'Recent node: ' + data.changesets[0].node);
 			
 			if (commits && ( commits.node == data.changesets[0].node) ) {
 				console.log('we already have the latest');
@@ -122,7 +172,7 @@ var	https = require('https'),
 
 		// emits events to the client
 		output: function (socketEvent, data) {
-			this.socket.emit(socketEvent, { results: data });
+			// this.socket.emit(socketEvent, { results: data });
 		},
 
 		loadTemplate: function (templateFile) {
@@ -185,19 +235,8 @@ server.get('/', function (req, res) {
 io.sockets.on('connection', function (socket) {
 	socket.emit('server msg', { msg: 'Socket open' });
 
-	var totalRepos = config.repos.length,
-		i = 0,
-		delay = 1000 * 10;
-
-	setTimeout(function () {
-		for (i; i < totalRepos; i++) {
-			console.log('getting: ' + config.repos[i]);
-			app.getLatest({
-				repo: config.repos[i]
-			});
-		}
-	}, delay);
-
-	app.init(socket);
+	app.createClient(socket);
 
 });
+
+app.init();
