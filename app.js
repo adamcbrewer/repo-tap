@@ -1,11 +1,14 @@
 var	https = require('https'),
 	http = require('http'),
-	config = require('./config.js'),
 	express = require('express'),
 	fs = require('fs'),
 	handlebars = require('handlebars'),
 	crypto = require('crypto'),
 
+
+	// My modules
+	config = require('./config.js'),
+	Client = require('./models/client.js'),
 
 
 	server = express(),
@@ -16,13 +19,13 @@ var	https = require('https'),
 
 
 
-	app = {
+	App = {
 
 		//
 		// Our application settings and configs
 		//
 
-		_loop: false,
+		_loop: false, // enabel to continuously poll the repositories
 
 		// TODO: These should both be logged at some stage
 		totalTimeoutRequests: 0, // how many times the timeout-loop has been called
@@ -36,24 +39,17 @@ var	https = require('https'),
 		clientCount: 0,
 
 		init: function () {
-			// this.socket = socket;
-
 			this._createTimer();
-
 		},
 
 
 		// push the connected client to the stack.
 		// each one should have it's own socket with which to connect to
 		createClient: function (socket) {
-
 			this.clients[socket.id] = socket;
-
 			this.clientCount++;
 			console.log('\n-- The connected clients are: ' + this.clientCount + '\n');
-
 			this.checkForCommits(socket);
-
 		},
 
 		destroyClient: function (id) {
@@ -70,7 +66,7 @@ var	https = require('https'),
 				// TODO:
 				// this.sendCommitsToClient(socket);
 			}
-			
+
 
 		},
 
@@ -79,6 +75,47 @@ var	https = require('https'),
 
 
 		},
+
+		_timerFetch: function () {
+
+			var totalRepos = config.repos.length,
+				i = 0;
+
+			this.totalTimeoutRequests++;
+			console.log('\n-- Total timeout requests: ' + this.totalTimeoutRequests + '\n');
+
+			for (i; i < totalRepos; i++) {
+				console.log('getting: ' + config.repos[i]);
+				this.totalRepoRequests++;
+				App.getLatest({
+					repo: config.repos[i]
+				});
+			}
+			console.log('\n-- Total repository requests: ' + this.totalRepoRequests + '\n');
+		},
+
+		_createTimer: function () {
+
+			var delay = 1000 * 10,
+				that = this;
+
+			console.log('LOG: Fetching first set of results');
+			this._timerFetch();
+
+
+			if (this._loop) {
+				setInterval(function () {
+					that._timerFetch.call(that);
+				}, delay);
+			}
+
+		},
+
+
+		getAll: function () {
+			console.log(this.results.commits);
+		},
+
 
 		getLatest: function (args) {
 
@@ -105,7 +142,7 @@ var	https = require('https'),
 				// console.log('HEADERS: ' + JSON.stringify(res.headers));
 
 				res.setEncoding('utf8');
-				
+
 				var jsonString = '',
 					json = {};
 				res.on('data', function (chunk) {
@@ -125,12 +162,12 @@ var	https = require('https'),
 			data = JSON.parse(jsonString);
 			data.repo = repo || null;
 
-			if (this.results.commits === null) this.results.commits = {}; 
+			if (this.results.commits === null) this.results.commits = {};
 
 			var commits = this.results.commits[repo];
 
 			if (commits) console.log('Stored Node: ' + commits.node, 'Recent node: ' + data.changesets[0].node);
-			
+
 			if (commits && ( commits.node == data.changesets[0].node) ) {
 				console.log('we already have the latest');
 				// this.constructTemplate('partials/commit.tmpl', data);
@@ -169,7 +206,7 @@ var	https = require('https'),
 
 		loadTemplate: function (templateFile) {
 
-			
+
 			var source = fs.readFileSync('./view/'+ templateFile, 'utf8', function (err, html) {
 				if (err) throw err;
 				return html;
@@ -245,7 +282,7 @@ server.get('/', function (req, res) {
 
 	// debug = JSON.stringify(req.query);
 
-	var source = app.loadTemplate('layout.tmpl'),
+	var source = App.loadTemplate('layout.tmpl'),
 		template = handlebars.compile(source),
 		view = template({
 			stylesheets: [
@@ -256,6 +293,9 @@ server.get('/', function (req, res) {
 		});
 
 
+	App.getAll();
+
+
 	res.send(view);
 
 });
@@ -263,13 +303,16 @@ server.get('/', function (req, res) {
 io.sockets.on('connection', function (socket) {
 	socket.emit('server msg', { msg: 'Socket open' });
 
-	app.createClient(socket);
+
+
+
+	App.createClient(new Client({ socket: socket}));
 
 	// So we can remove the client from the server conection stack
 	socket.on('disconnect', function () {
-		app.destroyClient(socket.id);
+		App.destroyClient(socket.id);
 	});
 
 });
 
-app.init();
+App.init();
