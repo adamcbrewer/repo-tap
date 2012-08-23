@@ -31,10 +31,7 @@ var	https = require('https'),
 		totalTimeoutRequests: 0, // how many times the timeout-loop has been called
 		totalRepoRequests: 0, // how many times we have called an individual repo
 
-		results: {
-			commits: null,
-			count: 0 // total commits fetched since the server's been running
-		},
+		commits: [],
 		clients: {},
 		clientCount: 0,
 
@@ -61,63 +58,32 @@ var	https = require('https'),
 		// Check the server for the stack of fetched commits
 		checkForCommits: function (socket) {
 
-			if (this.results.commits !== null) {
-
-				// TODO:
-				// this.sendCommitsToClient(socket);
-			}
-
+			console.log('-- TODO: CHECK FOR COMMITS AND SEND TO CLIENT');
 
 		},
 
 		sendCommitsToClient: function (socket) {
 
-
-
-		},
-
-		_timerFetch: function () {
-
-			var totalRepos = config.repos.length,
-				i = 0;
-
-			this.totalTimeoutRequests++;
-			console.log('\n-- Total timeout requests: ' + this.totalTimeoutRequests + '\n');
-
-			for (i; i < totalRepos; i++) {
-				console.log('getting: ' + config.repos[i]);
-				this.totalRepoRequests++;
-				App.getLatest({
-					repo: config.repos[i]
-				});
-			}
-			console.log('\n-- Total repository requests: ' + this.totalRepoRequests + '\n');
-		},
-
-		_createTimer: function () {
-
-			var delay = 1000 * 10,
-				that = this;
-
-			console.log('LOG: Fetching first set of results');
-			this._timerFetch();
-
-
-			if (this._loop) {
-				setInterval(function () {
-					that._timerFetch.call(that);
-				}, delay);
-			}
+			//this.constructTemplate('partials/commit.tmpl', data);
 
 		},
+
 
 
 		getAll: function () {
-			console.log(this.results.commits);
+			console.log(this.commits);
 		},
 
 
-		getLatest: function (args) {
+
+		//
+		// FETCHING COMMITS FROM REPOS
+		//
+		// This function fetches from the remote source
+		// and usually from a timeout function.
+		// =========================================
+		//
+		fetch: function (args) {
 
 			args = args || {};
 
@@ -149,34 +115,35 @@ var	https = require('https'),
 						jsonString += chunk;
 					})
 					.on('end', function () {
-						that.processResults(jsonString, repo);
+						that.stackCommits(jsonString, repo);
 					});
 
 			}).end();
 
 		},
 
-		// This function is the router/filter for what happens to data when
-		// it return from the remote source
-		processResults: function (jsonString, repo) {
-			data = JSON.parse(jsonString);
-			data.repo = repo || null;
 
-			if (this.results.commits === null) this.results.commits = {};
+		//
+		// PUSHING NEW COMMITS TO THE STACK
+		//
+		// This funtion parses the requested data and
+		// pushes any commits to the app stack
+		// =========================================
+		//
+		stackCommits: function (jsonString, repo) {
+			var data = JSON.parse(jsonString),
+				commits = data.changesets,
+				that = this;
 
-			var commits = this.results.commits[repo];
+			commits.forEach(function (r, i) {
+				r._key = repo;
+				that.commits.push(r);
+			});
 
-			if (commits) console.log('Stored Node: ' + commits.node, 'Recent node: ' + data.changesets[0].node);
-
-			if (commits && ( commits.node == data.changesets[0].node) ) {
-				console.log('we already have the latest');
-				// this.constructTemplate('partials/commit.tmpl', data);
-			} else {
-				// Store the latest commits we have just processed
-				this.results.commits[data.repo] = data.changesets[0]; // because we only have one, we store the first
-				this.constructTemplate('partials/commit.tmpl', data);
-			}
 		},
+
+
+
 
 		constructTemplate: function (tmpl, data) {
 
@@ -228,7 +195,7 @@ var	https = require('https'),
 			for (i; i < totalRepos; i++) {
 				console.log('getting: ' + config.repos[i]);
 				this.totalRepoRequests++;
-				app.getLatest({
+				App.fetch({
 					repo: config.repos[i]
 				});
 			}
@@ -292,11 +259,11 @@ server.get('/', function (req, res) {
 			debug: debug
 		});
 
-
+	// TODO: output current list of repos
 	App.getAll();
 
-
 	res.send(view);
+
 
 });
 
