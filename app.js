@@ -80,41 +80,6 @@ var	https = require('https'),
 
 		},
 
-		_timerFetch: function () {
-			
-			var totalRepos = config.repos.length,
-				i = 0;
-
-			this.totalTimeoutRequests++;
-			console.log('\n-- Total timeout requests: ' + this.totalTimeoutRequests + '\n');
-
-			for (i; i < totalRepos; i++) {
-				console.log('getting: ' + config.repos[i]);
-				this.totalRepoRequests++;
-				app.getLatest({
-					repo: config.repos[i]
-				});
-			}
-			console.log('\n-- Total repository requests: ' + this.totalRepoRequests + '\n');
-		},
-
-		_createTimer: function () {
-
-			var delay = 1000 * 10,
-				that = this;
-
-			console.log('LOG: Fetching first set of results');
-			this._timerFetch();
-			
-
-			if (this._loop) {
-				setInterval(function () {
-					that._timerFetch.call(that);
-				}, delay);
-			}
-
-		},
-
 		getLatest: function (args) {
 
 			args = args || {};
@@ -211,6 +176,42 @@ var	https = require('https'),
 			});
 
 			return source;
+
+		},
+
+
+		_timerFetch: function () {
+			
+			var totalRepos = config.repos.length,
+				i = 0;
+
+			this.totalTimeoutRequests++;
+			console.log('\n-- Total timeout requests: ' + this.totalTimeoutRequests + '\n');
+
+			for (i; i < totalRepos; i++) {
+				console.log('getting: ' + config.repos[i]);
+				this.totalRepoRequests++;
+				app.getLatest({
+					repo: config.repos[i]
+				});
+			}
+			console.log('\n-- Total repository requests: ' + this.totalRepoRequests + '\n');
+		},
+
+		_createTimer: function () {
+
+			var delay = 1000 * 10,
+				that = this;
+
+			console.log('LOG: Fetching first set of results');
+			this._timerFetch();
+			
+
+			if (this._loop) {
+				setInterval(function () {
+					that._timerFetch.call(that);
+				}, delay);
+			}
 
 		}
 
