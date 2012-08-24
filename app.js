@@ -22,58 +22,142 @@ var	https = require('https'),
 	App = {
 
 		//
-		// Our application settings and configs
+		// SETTINGS AND CONFIGS
 		//
-
+		// =========================================
+		//
 		_loop: false, // enabel to continuously poll the repositories
-
 		// TODO: These should both be logged at some stage
 		totalTimeoutRequests: 0, // how many times the timeout-loop has been called
 		totalRepoRequests: 0, // how many times we have called an individual repo
-
 		commits: [],
 		clients: {},
 		clientCount: 0,
+
 
 		init: function () {
 			this._createTimer();
 		},
 
 
-		// push the connected client to the stack.
-		// each one should have it's own socket with which to connect to
-		createClient: function (socket) {
-			this.clients[socket.id] = socket;
+		//
+		// CREATING CLIENT CONNECTIONS
+		//
+		// Push the connected client to the stack.
+		// Each one should have it's own socket with which to connect to.
+		// =========================================
+		//
+		createClient: function (client) {
+			this.clients[client.socket.id] = client;
 			this.clientCount++;
 			console.log('\n-- The connected clients are: ' + this.clientCount + '\n');
-			this.checkForCommits(socket);
+			this.checkForCommits(client);
 		},
 
+
+		//
+		// DESTROYING CLIENT CONNECTIONS
+		//
+		// Takes an ID and removes the client from the stack.
+		// =========================================
+		//
 		destroyClient: function (id) {
 			if (this.clients[id]) delete this.clients[id];
 			this.clientCount--;
 			console.log('\n-- The connected clients are: ' + this.clientCount + '\n');
 		},
 
-		// Check the server for the stack of fetched commits
-		checkForCommits: function (socket) {
 
-			console.log('-- TODO: CHECK FOR COMMITS AND SEND TO CLIENT');
+		//
+		// CHECKING FOR COMMITS
+		//
+		// =========================================
+		//
+		checkForCommits: function (client) {
+
+			if (this.commits.length) this.sendCommitsToClient(client);
 
 		},
 
-		sendCommitsToClient: function (socket) {
 
-			//this.constructTemplate('partials/commit.tmpl', data);
+		//
+		// SENDING COMMITS TO CLIENT
+		//
+		// =========================================
+		//
+		sendCommitsToClient: function (client) {
+
+			this.renderTemplate('partials/commit.tmpl', this.commits, client);
 
 		},
 
 
+		//
+		// RENDERING TEMPLATES
+		//
+		// Takes a template file and a data object
+		// =========================================
+		//
+		renderTemplate: function (tmpl, data, client) {
 
+			var source = this.loadTemplate(tmpl); // loads template
+				template = handlebars.compile(source), // compiles with data
+				commits = [],
+				numCommits = data.length,
+				i = 0;
+
+			// Renders a new html element for each changeset
+			// and pushed to the stack.
+			for ( i; i < numCommits; i++ ) {
+				commits.push(
+					template(data[i])
+				);
+			}
+
+			this.sendCommits({ commits: commits.reverse() }, client);
+
+		},
+
+
+		//
+		// RUNTIME TEMPLATE LOADING
+		//
+		// Will read any template file when requested.
+		// =========================================
+		//
+		loadTemplate: function (templateFile) {
+
+			var source = fs.readFileSync('./view/'+ templateFile, 'utf8', function (err, html) {
+				if (err) throw err;
+				return html;
+			});
+
+			return source;
+
+		},
+
+
+		//
+		// GETTING ALL COMMITS
+		//
+		// Returns all the rendered commits in the stack.
+		// =========================================
+		//
 		getAll: function () {
-			console.log(this.commits);
+
+			// console.log(this.commits);
+
 		},
 
+		//
+		// SENDING COMMITS THROUGH CLIENT SOCKET
+		//
+		// Emits events to the specified client.
+		// =========================================
+		//
+		sendCommits: function (data, client) {
+			client.socket.emit('all changesets', { results: data });
+		},
 
 
 		//
@@ -143,49 +227,8 @@ var	https = require('https'),
 		},
 
 
-
-
-		constructTemplate: function (tmpl, data) {
-
-			var source = this.loadTemplate(tmpl);
-				template = handlebars.compile(source),
-				commits = [],
-				numCommits = data.changesets.length,
-				i = 0;
-
-			// Renders a new html element for each changeset
-			// and pushed to the stack.
-			for ( i; i < numCommits; i++ ) {
-				data.changesets[i].repoName = data.repo;
-				commits.push(
-					template(data.changesets[i])
-				);
-			}
-
-			this.output('all changesets', { commits: commits.reverse() });
-
-		},
-
-		// emits events to the client
-		output: function (socketEvent, data) {
-			// this.socket.emit(socketEvent, { results: data });
-		},
-
-		loadTemplate: function (templateFile) {
-
-
-			var source = fs.readFileSync('./view/'+ templateFile, 'utf8', function (err, html) {
-				if (err) throw err;
-				return html;
-			});
-
-			return source;
-
-		},
-
-
 		_timerFetch: function () {
-			
+
 			var totalRepos = config.repos.length,
 				i = 0;
 
@@ -209,7 +252,7 @@ var	https = require('https'),
 
 			console.log('LOG: Fetching first set of results');
 			this._timerFetch();
-			
+
 
 			if (this._loop) {
 				setInterval(function () {
@@ -259,7 +302,6 @@ server.get('/', function (req, res) {
 			debug: debug
 		});
 
-	// TODO: output current list of repos
 	App.getAll();
 
 	res.send(view);
@@ -269,9 +311,6 @@ server.get('/', function (req, res) {
 
 io.sockets.on('connection', function (socket) {
 	socket.emit('server msg', { msg: 'Socket open' });
-
-
-
 
 	App.createClient(new Client({ socket: socket}));
 
