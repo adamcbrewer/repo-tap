@@ -3,13 +3,12 @@
 	<meta charset="utf-8">
 
 	<title>RepoTap - Eavesdropping in on your commits</title>
-	
+
 	<meta name="description" content="">
 	<meta name="keywords" content="">
 
-	{{#stylesheets }}
-		<link href="{{ href }}" rel="stylesheet">
-	{{/stylesheets }}
+	<link href="assets/css/reset.css" rel="stylesheet">
+	<link href="assets/css/core.css" rel="stylesheet">
 
 	<script src="assets/js/lib/modernizr-2.6.1.min.js"></script>
 
@@ -17,37 +16,37 @@
 <body>
 
 	<div id="wrapper">
-			
+
 		<var id="commit-count"></var>
 
 		<header id="header">
-			
+
 			<h1>RepoTap</h1>
 			<p>ReopTap is commit.</p>
 
 			<nav id="navigation">
-				
+
 			</nav> <!-- #navigation -->
-			
+
 		</header> <!-- #header -->
-			
+
 		<section role="main" id="content">
-			
+
 			<section id="commits"></section>
-				
+
 		</section> <!-- #content -->
-		
+
 		<footer id="footer">
-			
+
 		</footer> <!-- #footer -->
-			
+
 	</div> <!-- #wrapper -->
 
-	<script src="http://localhost:8080/socket.io/socket.io.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
 	<script>
 		var App = {
-			socket: io.connect('http://localhost:8080'),
-			basePath: ''
+			socket: io.connect('{{ basePath }}'),
+			basePath: '{{ basePath }}'
 		};
 
 	</script>

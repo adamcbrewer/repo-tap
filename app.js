@@ -3,18 +3,15 @@ var	https = require('https'),
 	express = require('express'),
 	fs = require('fs'),
 	handlebars = require('handlebars'),
-	crypto = require('crypto'),
 
 
 	// My modules
 	config = require('./config.js'),
 	Client = require('./models/client.js'),
 
-
 	server = express(),
-	socketServer = http.createServer(server),
-	io = require('socket.io').listen(socketServer),
-
+	serverInstance = http.createServer(server),
+	io = require('socket.io').listen(serverInstance),
 
 
 	App = {
@@ -24,7 +21,8 @@ var	https = require('https'),
 		//
 		// =========================================
 		//
-		_loop: true, // enabel to continuously poll the repositories
+		// enabel to continuously poll the repositories
+		_loop: false,
 		// TODO: These should both be logged at some stage
 		totalTimeoutRequests: 0, // how many times the timeout-loop has been called
 		totalRepoRequests: 0, // how many times we have called an individual repo
@@ -304,8 +302,7 @@ var	https = require('https'),
 //
 // When a user lands on this page, a new http request should be fired
 // to retreive the account changeset.
-server.listen(8888);
-socketServer.listen(8080);
+serverInstance.listen(config.serverPort);
 
 
 // Sevring up the assets directory
@@ -327,10 +324,7 @@ server.get('/*', function (req, res) {
 	var source = App.loadTemplate('layout.tmpl'),
 		template = handlebars.compile(source),
 		view = template({
-			stylesheets: [
-				{ href: 'assets/css/reset.css' },
-				{ href: 'assets/css/core.css' }
-			],
+			basePath: config.basePath,
 			debug: debug
 		});
 
