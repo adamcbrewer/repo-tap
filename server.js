@@ -14,7 +14,7 @@ var	https = require('https'),
 	io = require('socket.io').listen(serverInstance),
 
 
-	App = {
+	Server = {
 
 		//
 		// SETTINGS AND CONFIGS
@@ -260,7 +260,7 @@ var	https = require('https'),
 			for (i; i < totalRepos; i++) {
 				console.log('getting: ' + config.repos[i]);
 				this.totalRepoRequests++;
-				App.fetch({
+				this.fetch({
 					repo: config.repos[i]
 				});
 			}
@@ -321,14 +321,14 @@ server.get('/*', function (req, res) {
 
 	// debug = JSON.stringify(req.query);
 
-	var source = App.loadTemplate('layout.tmpl'),
+	var source = Server.loadTemplate('layout.tmpl'),
 		template = handlebars.compile(source),
 		view = template({
 			basePath: config.basePath,
 			debug: debug
 		});
 
-	App.getAll();
+	Server.getAll();
 
 	res.send(view);
 
@@ -338,13 +338,13 @@ server.get('/*', function (req, res) {
 io.sockets.on('connection', function (socket) {
 	socket.emit('server msg', { msg: 'Socket open' });
 
-	App.createClient(new Client({ socket: socket}));
+	Server.createClient(new Client({ socket: socket}));
 
 	// So we can remove the client from the server conection stack
 	socket.on('disconnect', function () {
-		App.destroyClient(socket.id);
+		Server.destroyClient(socket.id);
 	});
 
 });
 
-App.init();
+Server.init();
