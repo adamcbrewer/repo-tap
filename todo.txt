@@ -1,0 +1,17 @@
+TODO LIST
+==========================
+
+// URGENT
+
+- 	delete clients when disconnect
+- 	socket.io through same port as express
+
+
+// LESS IMPORTANT
+
+- 	hard-code stylesheets
+- 	extra data in template file
+- 	pre-compile templte file. If exists then use pre-compiled one.
+- 	sort commits in the server stack when a user loads the page.
+	> 	this isn't needed any other time as new commits are automatically pre-pended
+		when sent to client in real time.

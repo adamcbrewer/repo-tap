@@ -15,8 +15,6 @@ var	https = require('https'),
 	socketServer = http.createServer(server),
 	io = require('socket.io').listen(socketServer),
 
-	md5sum = crypto.createHash('md5'),
-
 
 
 	App = {
