@@ -5,7 +5,7 @@
 *
 **/
 module.exports = function (params) {
-	
+
 	var socket = params.socket || false;
 
 	client = {
@@ -13,11 +13,7 @@ module.exports = function (params) {
 		_init: function () {
 
 			this.socket = socket;
-			console.log(this.socket.id);
-
-		},
-
-		_setup: function () {
+			this._key = socket.id;
 
 		}
 

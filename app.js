@@ -26,12 +26,12 @@ var	https = require('https'),
 		//
 		// =========================================
 		//
-		_loop: false, // enabel to continuously poll the repositories
+		_loop: true, // enabel to continuously poll the repositories
 		// TODO: These should both be logged at some stage
 		totalTimeoutRequests: 0, // how many times the timeout-loop has been called
 		totalRepoRequests: 0, // how many times we have called an individual repo
 		commits: [],
-		clients: {},
+		clients: [],
 		clientCount: 0,
 
 
@@ -48,10 +48,11 @@ var	https = require('https'),
 		// =========================================
 		//
 		createClient: function (client) {
-			this.clients[client.socket.id] = client;
+			this.clients.push(client);
 			this.clientCount++;
 			console.log('\n-- The connected clients are: ' + this.clientCount + '\n');
 			this.checkForCommits(client);
+
 		},
 
 
@@ -62,9 +63,9 @@ var	https = require('https'),
 		// =========================================
 		//
 		destroyClient: function (id) {
-			if (this.clients[id]) delete this.clients[id];
-			this.clientCount--;
-			console.log('\n-- The connected clients are: ' + this.clientCount + '\n');
+			// if (this.clients[id]) delete this.clients[id];
+			// this.clientCount--;
+			// console.log('\n-- The connected clients are: ' + this.clientCount + '\n');
 		},
 
 
@@ -75,19 +76,7 @@ var	https = require('https'),
 		//
 		checkForCommits: function (client) {
 
-			if (this.commits.length) this.sendCommitsToClient(client);
-
-		},
-
-
-		//
-		// SENDING COMMITS TO CLIENT
-		//
-		// =========================================
-		//
-		sendCommitsToClient: function (client) {
-
-			this.renderTemplate('partials/commit.tmpl', this.commits, client);
+			if (this.commits.length) this.render('partials/commit.tmpl', this.commits, client);
 
 		},
 
@@ -98,13 +87,14 @@ var	https = require('https'),
 		// Takes a template file and a data object
 		// =========================================
 		//
-		renderTemplate: function (tmpl, data, client) {
+		render: function (tmpl, data, client) {
 
 			var source = this.loadTemplate(tmpl); // loads template
 				template = handlebars.compile(source), // compiles with data
 				commits = [],
 				numCommits = data.length,
-				i = 0;
+				i = 0,
+				that = this;
 
 			// Renders a new html element for each changeset
 			// and pushed to the stack.
@@ -114,9 +104,17 @@ var	https = require('https'),
 				);
 			}
 
-			this.sendCommits({ commits: commits.reverse() }, client);
+			if (client) {
+				this.sendCommitsToClient({ commits: commits.reverse() }, client);
+			} else {
+				this.clients.forEach(function (client, i) {
+					that.sendCommitsToClient({ commits: commits.reverse() }, client);
+				});
+			}
 
 		},
+
+
 
 
 		//
@@ -155,7 +153,7 @@ var	https = require('https'),
 		// Emits events to the specified client.
 		// =========================================
 		//
-		sendCommits: function (data, client) {
+		sendCommitsToClient: function (data, client) {
 			client.socket.emit('all changesets', { results: data });
 		},
 
@@ -217,16 +215,44 @@ var	https = require('https'),
 		stackCommits: function (jsonString, repo) {
 			var data = JSON.parse(jsonString),
 				commits = data.changesets,
-				that = this;
+				that = this,
+				exists = null;
 
-			commits.forEach(function (r, i) {
-				r._key = repo;
-				that.commits.push(r);
+			commits.forEach(function (changeset, i) {
+				exists = that.checkIfChangesetExists(changeset);
+				if (exists === false) {
+					changeset._key = repo;
+					that.commits.push(changeset);
+					that.render('partials/commit.tmpl', [changeset]); // will push the new dat to all clients
+				}
 			});
 
 		},
 
 
+		checkIfChangesetExists: function (changeset) {
+
+			var exists = false;
+			this.commits.forEach(function (c, i) {
+				console.log('Checking changeset ' + c.node + ' against ' + changeset.node + ' || ' + c._key);
+				if (c.node == changeset.node) {
+					exists = true;
+					console.log('Changeset "'+c.node+'" already exists for ' + c._key);
+					return exists;
+				}
+			});
+			return exists;
+
+		},
+
+
+		//
+		// REPO FOREACH FETCH LOOP
+		//
+		// Loops through all the repos contained in the config file
+		// and does a 'fetch' for each one.
+		// =========================================
+		//
 		_timerFetch: function () {
 
 			var totalRepos = config.repos.length,
@@ -245,9 +271,17 @@ var	https = require('https'),
 			console.log('\n-- Total repository requests: ' + this.totalRepoRequests + '\n');
 		},
 
+
+		//
+		// TIMER LOOP
+		//
+		// Initializes the interval in which we recurse all the repos
+		// for their latest commits.
+		// =========================================
+		//
 		_createTimer: function () {
 
-			var delay = 1000 * 10,
+			var delay = 1000 * 20,
 				that = this;
 
 			console.log('LOG: Fetching first set of results');
@@ -285,7 +319,7 @@ server.use('/assets', express.static( assetsDir ));
 
 
 // Set up our routes
-server.get('/', function (req, res) {
+server.get('/*', function (req, res) {
 
 	var debug = false;
 
