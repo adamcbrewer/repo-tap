@@ -44,4 +44,13 @@ $(function () {
 	App.commits = $('#commits');
 	App.commitCount = $('#commit-count');
 
+	App.commits.on('click', '[data-action="toggle-details"]', function (evt) {
+		evt.preventDefault();
+		var details =  $(this).parents('[data-node]').find('[data-result="toggle-details"]');
+		details.toggleClass('hidden');
+	});
+
+
+
+
 });

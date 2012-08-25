@@ -132,18 +132,35 @@ code { font-family: @f-stack-2; padding: 10px; border: 1px solid #DDD; border-ra
 ==================================================== */
 .commit {
     margin: 0px 0px 0px;
-    padding: 20px 20px 20px;
     border-bottom: 1px solid #C9C9C9;
     border-top: 1px solid #FFF;
+
+    .inner { padding: 20px 20px 20px; position: relative; }
+
     &:last-child { border-bottom: none; }
     &:first-child { border-top: none; }
     &:hover { background: #FDFDFD; }
     time { color: @c-red; }
     header { color: @c-blue; }
-    .repo-name { color: @c-green; float:right; }
 }
-
-
+.repo-name { color: @c-green; }
+.open-details-link {
+    float: right; color: #DDD;
+    &:hover { color: #999; text-decoration: none; }
+}
+.commit-details {
+    overflow: hidden;
+    background: #FFF;
+    .inner { border-top: 1px solid #C9C9C9; }
+    &.hidden { height: 0px; }
+}
+.commit-revision { float: right; font-size: 12px; }
+.commit-parent-link { color: @c-blue; }
+.commit-files {
+    margin: 10px 0px 10px;
+    h4 { font-size: 14px; font-weight: normal; }
+    ul { color: #BBB; margin: 0px 0px 0px 20px; }
+}
 .debug { position: fixed; bottom: 20px; right: 20px; font-size: 14px; }
 
 

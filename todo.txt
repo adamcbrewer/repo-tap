@@ -3,9 +3,6 @@ TODO LIST
 
 // URGENT
 
-- 	delete clients when disconnect
-- 	socket.io through same port as express
-
 
 // LESS IMPORTANT
 

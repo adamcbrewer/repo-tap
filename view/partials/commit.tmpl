@@ -1,10 +1,29 @@
-<article class="commit" data-node="{{ node }}">
-	<header>
-		<h3 class="author">{{ author }}</h3>
-	</header>
-	<p>{{ message }}</p>
-	<footer>
-		<aside class="repo-name">{{ _key }}</aside>
-		<time datetime="{{ utstimestamp }}">{{ timestamp }}</time>
-	</footer>
+<article class="commit" id="{{ node }}" data-node="{{ node }}">
+	<div class="inner">
+		<header>
+			<h3 class="author">{{ author }}</h3>
+		</header>
+		<p>{{ message }}</p>
+		<footer>
+			<aside class="repo-name">{{ _key }}</aside>
+			<time datetime="{{ utstimestamp }}">{{ timestamp }}</time>
+			<a class="open-details-link" data-action="toggle-details" href="#!/open-details">details</a>
+		</footer>
+	</div>
+	<aside data-result="toggle-details" class="commit-details hidden">
+		<div class="inner">
+			<header>
+				<span class="commit-revision" title="changeset revison">Rev: {{ revision }}</span>
+				<p>Parents: {{#parents}}<a class="commit-parent-link" href="#{{ this }}">{{ this }}</a> {{/parents}}</p>
+			</header>
+			<section class="commit-files">
+				<h4>Changeset Files:</h4>
+				<ul>
+					{{#files}}
+						<li>[{{ type }}] {{ file }}</li>
+					{{/files}}
+				</ul>
+			</section>
+		</div>
+	</aside>
 </article>

@@ -23,13 +23,13 @@ var	https = require('https'),
 		//
 		// enabel to continuously poll the repositories
 		_loop: false,
+		_loopInterval: 1000 * 20,
 		// TODO: These should both be logged at some stage
 		totalTimeoutRequests: 0, // how many times the timeout-loop has been called
 		totalRepoRequests: 0, // how many times we have called an individual repo
 		commits: [],
 		clients: [],
 		clientCount: 0,
-
 
 		init: function () {
 			this._createTimer();
@@ -59,9 +59,18 @@ var	https = require('https'),
 		// =========================================
 		//
 		destroyClient: function (id) {
-			// if (this.clients[id]) delete this.clients[id];
-			// this.clientCount--;
-			// console.log('\n-- The connected clients are: ' + this.clientCount + '\n');
+			var that = this;
+			this.clients.forEach(function (client, i) {
+				if (id === client._key) {
+					that.clients.splice(i, 1);
+					that.clientCount--;
+					console.log('\n-- The connected clients are: ' + that.clientCount + '\n');
+					return;
+				} else {
+					console.log('Couldn\'t find client with id: ' + id);
+				}
+			});
+
 		},
 
 
@@ -277,7 +286,7 @@ var	https = require('https'),
 		//
 		_createTimer: function () {
 
-			var delay = 1000 * 20,
+			var delay = this._loopInterval,
 				that = this;
 
 			console.log('LOG: Fetching first set of results');
@@ -310,7 +319,6 @@ var publicDir = __dirname + '/public',
 	assetsDir = publicDir + '/assets';
 
 server.use('/assets', express.static( assetsDir ));
-// server.use('/socket.io', express.static( __dirname + '/node_modules/socket.io/lib' ));
 
 
 // Set up our routes
