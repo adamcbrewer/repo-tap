@@ -16,10 +16,6 @@ TODO LIST
 
 // LESS IMPORTANT
 
-- 	moment.js for better time reading
-- 	display number of connected clients
-	> 	set up routes/paths for sockets
-- 	display a countdown until the next check
 
 
 // FUTURE

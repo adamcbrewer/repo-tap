@@ -21,15 +21,12 @@ var	https = require('https'),
 		//
 		// =========================================
 		//
-		// enabel to continuously poll the repositories
-		_loop: false,
-		_loopInterval: 1000 * 20,
-		// TODO: These should both be logged at some stage
+		_loop: true, // enabel to continuously poll the repositories
+		_loopInterval: 1000 * 60, // 1 minute
 		totalTimeoutRequests: 0, // how many times the timeout-loop has been called
 		totalRepoRequests: 0, // how many times we have called an individual repo
 		commits: [],
 		clients: [],
-		clientCount: 0,
 
 		init: function () {
 			this._createTimer();
@@ -44,10 +41,19 @@ var	https = require('https'),
 		// =========================================
 		//
 		createClient: function (client) {
+
 			this.clients.push(client);
-			this.clientCount++;
-			console.log('\n-- The connected clients are: ' + this.clientCount + '\n');
-			this.alertNewConnection(client);
+			console.log('\n-- The connected clients are: ' + this.clients.length + '\n');
+
+			this.broadcastStats(
+				{
+					client: { clients: this.clients.length, commits: this.commits.length },
+					all: { clients: this.clients.length }
+				},
+				client,
+				true
+			);
+
 			this.checkForCommits(client);
 
 		},
@@ -64,12 +70,11 @@ var	https = require('https'),
 			this.clients.forEach(function (client, i) {
 				if (id === client._key) {
 					that.clients.splice(i, 1);
-					that.clientCount--;
-					console.log('\n-- The connected clients are: ' + that.clientCount + '\n');
+					console.log('\n-- The connected clients are: ' + that.clients.length + '\n');
 
 					// We still have access to the socket object,
 					// which we only need for broadcasting to all other client sockets
-					that.alertBrokenConnection(client);
+					that.broadcastStats( { all: { clients: that.clients.length } }, client );
 
 					return;
 				} else {
@@ -80,35 +85,31 @@ var	https = require('https'),
 		},
 
 
-		alertNewConnection: function (client) {
+		//
+		// BROADCASTING STATS TO CLIENTS
+		//
+		// =========================================
+		//
+		broadcastStats: function (data, client, includeOrigin) {
 
-			var data = {
-				client: {
-					connectedClients: this.clients.length,
-					totalCommits: this.commits.length,
-					timeout: -10000
-				},
-				all: {
-					connectedClients: this.clients.length
+			includeOrigin = includeOrigin || false;
+			data = data || {};
+			client = client || this.clients[0] || false;
+
+			if (client) {
+				// Send to the original client
+				if (includeOrigin) {
+					// We can send the default 'all' data to eveybody if we don't
+					// specify anything specifically for the original client
+					var dataClient = data.client || data.all;
+					client.socket.emit('update stats', { results: dataClient });
 				}
-			};
 
-			client.socket.emit('update stats', { results: data.client }); // send only to the recently connected client
-			client.socket.broadcast.emit('update stats', { results: data.all }); // send ot all others
-
-		},
-
-
-		alertBrokenConnection: function (client) {
-
-			var data = {
-				connectedClients: this.clients.length
-			};
-			client.socket.broadcast.emit('update stats', { results: data }); // send ot all others
+				// Send to everyone
+				client.socket.broadcast.emit('update stats', { results: data.all });
+			}
 
 		},
-
-
 
 
 		//
@@ -176,18 +177,6 @@ var	https = require('https'),
 
 		},
 
-
-		//
-		// GETTING ALL COMMITS
-		//
-		// Returns all the rendered commits in the stack.
-		// =========================================
-		//
-		getAll: function () {
-
-			// console.log(this.commits);
-
-		},
 
 		//
 		// SENDING COMMITS THROUGH CLIENT SOCKET
@@ -265,7 +254,10 @@ var	https = require('https'),
 				if (exists === false) {
 					changeset._key = repo;
 					that.commits.push(changeset);
-					that.render('partials/commit.tmpl', [changeset]); // will push the new dat to all clients
+
+					that.broadcastStats( { all: { commits: that.commits.length } }, null, true );
+
+					that.render('partials/commit.tmpl', [changeset]); // will push the new data to all clients
 				}
 			});
 
@@ -310,6 +302,7 @@ var	https = require('https'),
 					repo: config.repos[i]
 				});
 			}
+			this.broadcastStats( { all: { requests: this.totalRepoRequests } }, null, true);
 			console.log('\n-- Total repository requests: ' + this.totalRepoRequests + '\n');
 		},
 
@@ -333,6 +326,7 @@ var	https = require('https'),
 			if (this._loop) {
 				setInterval(function () {
 					that._timerFetch.call(that);
+					that.broadcastStats({ all: { timeout: that._loopInterval/1000, repos: config.repos.length } }, null, true);
 				}, delay);
 			}
 
@@ -370,10 +364,10 @@ server.get('/*', function (req, res) {
 		template = handlebars.compile(source),
 		view = template({
 			basePath: config.basePath,
+			repos: config.repos.length,
+			requests: Server.totalRepoRequests || '-',
 			debug: debug
 		});
-
-	Server.getAll();
 
 	res.send(view);
 

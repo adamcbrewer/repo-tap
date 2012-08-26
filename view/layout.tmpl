@@ -23,20 +23,36 @@
 			<h1>RepoTap</h1>
 			<p>ReopTap is commit.</p>
 
-			<aside id="commit-stats" class="grids">
-				<div class="g g-1-3">
-					<span data-live="connected-users" class="stat-num">11</span>
-					connected users
-				</div>
-				<div class="g g-1-3">
-					<span data-live="total-commits" class="stat-num">-1</span>
-					total commits
-				</div>
-				<div class="g g-1-3">
-					<span data-live="timeout" class="stat-num">-1</span>
-					seconds until next check
-				</div>
-			</aside>
+			<div id="stats">
+				<aside id="commit-stats" class="grids">
+					<div class="g g-1-3">
+						<span data-live="connected-users" class="stat-num">-</span>
+						viewers
+					</div>
+					<div class="g g-1-3">
+						<span data-live="total-commits" class="stat-num">-</span>
+						total commits
+					</div>
+					<div class="g g-1-3">
+						<span data-live="timeout" class="stat-num">-</span>
+						seconds until next check
+					</div>
+				</aside>
+				<aside id="server-stats" class="grids">
+					<div class="g g-1-3">
+						<span data-live="repos" class="stat-num">{{ repos }}</span>
+						repos
+					</div>
+					<div class="g g-1-3">
+						<span data-live="repo-requests" class="stat-num">{{ requests }}</span>
+						repo requests
+					</div>
+					<div class="g g-1-3">
+						<span data-live="uptime" class="stat-num">-</span>
+						uptime
+					</div>
+				</aside>
+			</div>
 
 		</header> <!-- #header -->
 

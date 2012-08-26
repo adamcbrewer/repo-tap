@@ -25,9 +25,9 @@
 @c-bg: tranparent;
 @c-copy: #666;
 
-@c-blue: #0080ff;
-@c-green: #33cb98;
-@c-orange: #ff9934;
+@c-blue: #0051E6;
+@c-green: #008900;
+@c-orange: #ffa500;
 @c-red: #C00;
 
 @f-stack-1: Populaire, "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -133,9 +133,18 @@ code { font-family: @f-stack-2; padding: 10px; border: 1px solid #DDD; border-ra
 #commit-stats {
     border-top: 1px solid #C9C9C9;
     border-bottom: 1px solid #C9C9C9;
-    margin: 20px 0px 20px;
+    margin: 20px 0px 0px;
     padding: 20px 0px 20px;
     .g { text-align: center; }
+    .stat-num { margin-bottom: 6px; color: @c-red; font-size: 40px; }
+}
+#server-stats {
+    border-top: 1px solid #FFF;
+    border-bottom: 1px solid #C9C9C9;
+    margin: 0px 0px 20px;
+    padding: 14px 0px 14px;
+    .g { text-align: center; }
+    .stat-num { margin-bottom: 4px; color: @c-green; font-size: 20px; }
 }
 /* ====================================================
     MODULES STYLES
@@ -156,6 +165,7 @@ code { font-family: @f-stack-2; padding: 10px; border: 1px solid #DDD; border-ra
         .open-details-link { opacity: 0.9; }
     }
 }
+.author { color: #444; }
 .commit-time {
     float: right;
     &.icon-time:before { font-size: 16px; margin: 0px 6px 0px 0px; }
@@ -182,7 +192,7 @@ code { font-family: @f-stack-2; padding: 10px; border: 1px solid #DDD; border-ra
     p { margin-bottom: 6px; }
     ul { color: #888; margin: 0px 0px 0px 0px; font-style: italic; }
 }
-.stat-num { font-size: 40px; display: block; margin-bottom: 6px; color: @c-red; }
+.stat-num { display: block; }
 
 .grids { overflow: hidden; }
 .g {
