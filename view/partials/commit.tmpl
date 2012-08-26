@@ -1,13 +1,13 @@
 <article class="commit" id="{{ node }}" data-node="{{ node }}">
 	<div class="inner">
+		<time class="commit-time icon-time" datetime="{{ utstimestamp }}" title="{{ utstimestamp }}">{{ timestamp }}</time>
 		<header>
 			<h3 class="author">{{ author }}</h3>
 		</header>
 		<p>{{ message }}</p>
 		<footer>
+			<a class="open-details-link icon-info-sign" data-action="toggle-details" href="#!/open-details"></a>
 			<aside class="repo-name">{{ _key }}</aside>
-			<time datetime="{{ utstimestamp }}">{{ timestamp }}</time>
-			<a class="open-details-link" data-action="toggle-details" href="#!/open-details">details</a>
 		</footer>
 	</div>
 	<aside data-result="toggle-details" class="commit-details hidden">
@@ -17,7 +17,7 @@
 				<p>Parents: {{#parents}}<a class="commit-parent-link" href="#{{ this }}">{{ this }}</a> {{/parents}}</p>
 			</header>
 			<section class="commit-files">
-				<h4>Changeset Files:</h4>
+				<p>Changeset Files:</p>
 				<ul>
 					{{#files}}
 						<li>[{{ type }}] {{ file }}</li>

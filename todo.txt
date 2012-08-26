@@ -4,15 +4,26 @@ TODO LIST
 // URGENT
 
 
-// LESS IMPORTANT
 
-- 	extra data in template file
+// NEXT UP
+
 - 	pre-compile templte file. If exists then use pre-compiled one.
+- 	track if user has been sent the latest commits
 - 	sort commits in the server stack when a user loads the page.
 	> 	this isn't needed any other time as new commits are automatically pre-pended
 		when sent to client in real time.
 
 
+// LESS IMPORTANT
+
+- 	moment.js for better time reading
+- 	display number of connected clients
+	> 	set up routes/paths for sockets
+- 	display a countdown until the next check
+
+
 // FUTURE
 
-- 	track if user has been sent the latest commits
+- 	repo link displays page with all commits from that repo
+- 	fetch users' avatar
+	>	https://api.bitbucket.org/1.0/users/adamcbrewer/

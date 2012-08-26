@@ -42,7 +42,7 @@
 $(function () {
 
 	App.commits = $('#commits');
-	App.commitCount = $('#commit-count');
+	App.commitStats = $('#commit-stats');
 
 	App.commits.on('click', '[data-action="toggle-details"]', function (evt) {
 		evt.preventDefault();
