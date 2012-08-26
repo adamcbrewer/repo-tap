@@ -70,6 +70,13 @@
 			});
 		}
 
+		if (results.uptime) {
+			uptime.fadeOut(200, function () {
+				this.innerHTML = results.uptime;
+				App.initCountup(uptime.fadeIn(200));
+			});
+		}
+
 	});
 
 
@@ -101,6 +108,16 @@
 		var int = parseInt(el.html(), 10);
 		this._cdTimeout = setInterval(function () {
 			el.html(--int);
+		}, 1000);
+
+	};
+
+	App.initCountup = function (el) {
+
+		if (this._cuTimeout) clearInterval(this._cuTimeout);
+		var int = parseInt(el.html(), 10);
+		this._cuTimeout = setInterval(function () {
+			el.html(++int);
 		}, 1000);
 
 	};

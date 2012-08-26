@@ -47,7 +47,7 @@ var	https = require('https'),
 
 			this.broadcastStats(
 				{
-					client: { clients: this.clients.length, commits: this.commits.length },
+					client: { clients: this.clients.length, commits: this.commits.length, uptime: process.uptime() },
 					all: { clients: this.clients.length }
 				},
 				client,
@@ -366,11 +366,11 @@ server.get('/*', function (req, res) {
 			basePath: config.basePath,
 			repos: config.repos.length,
 			requests: Server.totalRepoRequests || '-',
+			uptime: process.uptime(),
 			debug: debug
 		});
 
 	res.send(view);
-
 
 });
 

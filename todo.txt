@@ -16,7 +16,8 @@ TODO LIST
 
 // LESS IMPORTANT
 
-
+- 	process uptime (in minutes)
+- 	process memory usage
 
 // FUTURE
 
