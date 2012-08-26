@@ -2,6 +2,12 @@
 
 	App = App || {};
 
+
+	//
+	// SOCKET EVENTS
+	//
+	// =========================================
+	//
 	App.socket.on('server msg', function (data) {
 		console.info(data.msg);
 	});
@@ -10,11 +16,53 @@
 		App.showCommits(data.results.commits);
 	});
 
+	// Debugging
 	App.socket.on('debug', function (data) {
 		console.dir(data);
 	});
 
+	// Updating server stats
+	App.socket.on('update stats', function (data) {
 
+		var commitStats = this.commitStats || $('#commit-stats'),
+			results = data.results,
+			connectedUsers = commitStats.find('[data-live="connected-users"]'),
+			totalCommits = commitStats.find('[data-live="total-commits"]'),
+			timeout = commitStats.find('[data-live="timeout"]');
+
+		if (results.connectedClients) {
+			connectedUsers.fadeOut(200, function () {
+				this.innerHTML = results.connectedClients;
+				connectedUsers.fadeIn(200);
+			});
+		}
+
+		if (results.totalCommits) {
+			totalCommits.fadeOut(200, function () {
+				this.innerHTML = results.totalCommits;
+				totalCommits.fadeIn(200);
+			});
+		}
+
+		if (results.timeout) {
+			timeout.fadeOut(200, function () {
+				this.innerHTML = results.timeout;
+				timeout.fadeIn(200);
+			});
+		}
+
+	});
+
+
+
+
+	//
+	// SHOW COMMITS ON SCREEN
+	//
+	// The function called after receiving a socket event
+	// from the server with commits to display.
+	// =========================================
+	//
 	App.showCommits = function (commits) {
 
 		commits = commits || [];
@@ -23,16 +71,9 @@
 			totalCommits = this.commits.find('.commit').length,
 			that = this;
 
-		// console.log(this.commits);
-
 		$.each(commits, function (i, commit) {
-			setTimeout(function () {
-				that.commits.prepend(commit);
-			}, (50 * i) );
+			that.commits.prepend(commit);
 		});
-
-		// console.log(totalCommits);
-		// this.commitCount.html(totalCommits);
 
 	};
 

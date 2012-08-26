@@ -56,6 +56,9 @@
 	<script>
 		var App = {
 			socket: io.connect('{{ basePath }}'),
+			channels: {
+				stats: io.connect('{{ basePath }}/stats')
+			},
 			basePath: '{{ basePath }}'
 		};
 

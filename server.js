@@ -47,6 +47,7 @@ var	https = require('https'),
 			this.clients.push(client);
 			this.clientCount++;
 			console.log('\n-- The connected clients are: ' + this.clientCount + '\n');
+			this.alertNewConnection(client);
 			this.checkForCommits(client);
 
 		},
@@ -65,6 +66,11 @@ var	https = require('https'),
 					that.clients.splice(i, 1);
 					that.clientCount--;
 					console.log('\n-- The connected clients are: ' + that.clientCount + '\n');
+
+					// We still have access to the socket object,
+					// which we only need for broadcasting to all other client sockets
+					that.alertBrokenConnection(client);
+
 					return;
 				} else {
 					console.log('Couldn\'t find client with id: ' + id);
@@ -72,6 +78,37 @@ var	https = require('https'),
 			});
 
 		},
+
+
+		alertNewConnection: function (client) {
+
+			var data = {
+				client: {
+					connectedClients: this.clients.length,
+					totalCommits: this.commits.length,
+					timeout: -10000
+				},
+				all: {
+					connectedClients: this.clients.length
+				}
+			};
+
+			client.socket.emit('update stats', { results: data.client }); // send only to the recently connected client
+			client.socket.broadcast.emit('update stats', { results: data.all }); // send ot all others
+
+		},
+
+
+		alertBrokenConnection: function (client) {
+
+			var data = {
+				connectedClients: this.clients.length
+			};
+			client.socket.broadcast.emit('update stats', { results: data }); // send ot all others
+
+		},
+
+
 
 
 		//
@@ -343,16 +380,22 @@ server.get('/*', function (req, res) {
 
 });
 
+
+//
+// SOCKET IO SETUP
+//
 io.sockets.on('connection', function (socket) {
 	socket.emit('server msg', { msg: 'Socket open' });
 
+	// Adding a client to the connected stack
 	Server.createClient(new Client({ socket: socket}));
 
-	// So we can remove the client from the server conection stack
+	// Remove the client from the server conection stack
 	socket.on('disconnect', function () {
 		Server.destroyClient(socket.id);
 	});
 
 });
+
 
 Server.init();
