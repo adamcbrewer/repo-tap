@@ -11,12 +11,12 @@ TODO LIST
 - 	track if user has been sent the latest commits
 - 	sort commits in the server stack when a user loads the page.
 	> 	this isn't needed any other time as new commits are automatically pre-pended
-		when sent to client in real time.
+		when sent to client in real time. Only needed when the page is loaded.
 
 
 // LESS IMPORTANT
 
-- 	process uptime (in minutes)
+- 	process uptime (convert to minutes)
 - 	process memory usage
 
 // FUTURE
